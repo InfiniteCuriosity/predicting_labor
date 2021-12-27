@@ -20,7 +20,6 @@ All employees: https://beta.bls.gov/dataViewer/view/timeseries/CES0000000001
 Consumer Price Index: https://beta.bls.gov/dataViewer/view/timeseries/CUSR0000SA0
 Unemployment: 	https://beta.bls.gov/dataViewer/view/timeseries/LNS14000000
 Average Hourly Earnings: 	https://beta.bls.gov/dataViewer/view/timeseries/CES0500000003
-Consumer Price Index: https://beta.bls.gov/dataViewer/view/timeseries/CUSR0000SA0
 Worker Productivity: 	https://beta.bls.gov/dataViewer/view/timeseries/PRS85006092
 
 Temporary help: https://beta.bls.gov/dataViewer/view/timeseries/CES6056132001
@@ -42,8 +41,95 @@ Total Separations Rate: https://beta.bls.gov/dataViewer/view/timeseries/JTS00000
 
 ```{r Retreive the data}
 
+library(tidyverse)
+library(fpp3)
+library(clock)
 
+#Convert files to tsibble format
+all_employees <- all_employees %>% 
+  mutate(Month = yearmonth(Label)) %>% 
+  as_tsibble() %>% 
+  mutate(all_employees_diff = difference(Value)) %>% 
+  select(Value:all_employees_diff)
 
+Consumer_price_index <- Consumer_price_index %>% 
+  mutate(Month = yearmonth(Label)) %>% 
+  as_tsibble() %>% 
+  mutate(CPI_diff = difference(Value)) %>% 
+  select(Value:CPI_diff)
+
+Unemployment <- Unemployment %>% 
+  mutate(Month = yearmonth(Label)) %>% 
+  as_tsibble() %>% 
+  mutate(Unemployment_diff = difference(Value)) %>% 
+  select(Value:Unemployment_diff)
+
+Average_hourly_earnings <- Average_hourly_earnings %>% 
+  mutate(Month = yearmonth(Label)) %>% 
+  as_tsibble() %>% 
+  mutate(Avg_earnings_diff = difference(Value)) %>% 
+  select(Value:Avg_earnings_diff)
+
+Temp_labor <- temp_labor %>% 
+  mutate(Month = yearmonth(Label)) %>% 
+  as_tsibble() %>% 
+  mutate(temp_labor_diff = difference(Value)) %>% 
+  select(Value:temp_labor_diff)
+
+Worker_productivity <- Worker_productivity %>% 
+  mutate(Month = yearquarter(Label)) %>% 
+  as_tsibble() %>% 
+  mutate(Productivity_diff = difference(Value)) %>% 
+  select(Value:Productivity_diff)
+
+Turnover_rate <- Turnover_rate %>% 
+  pivot_longer(cols = Jan:Dec)
+Turnover_rate$name = match(Turnover_rate$name, month.abb)
+Turnover_rate <- Turnover_rate %>% 
+    mutate(date = date_build(year = Year, month = name, day = 1),
+         key = 0,
+         turnover_rate = value,
+         turnover_rate_diff = difference(turnover_rate)) %>% 
+  select(date, key, turnover_rate, turnover_rate_diff) %>% 
+  as_tsibble(index = date, key = 0) %>% 
+  mutate(date =yearmonth(date)) %>% 
+  arrange(date)
+
+Hires <- Hires %>% 
+  mutate(Month = yearmonth(Label), key = 0, Hires = Value) %>% 
+  as_tsibble(index = Month, key = key) %>% 
+  mutate(Hires_diff = difference(Value)) %>% 
+  select(Month:Hires_diff)
+
+Job_openings <- Job_openings %>% 
+  mutate(Month = yearmonth(Label), key = 0, Job_openings = Value) %>% 
+  as_tsibble(index = Month, key = key) %>% 
+  mutate(Job_openings_diff = difference(Value)) %>% 
+  select(Month:Job_openings_diff)
+
+Layoffs_and_discharges <- Layoffs_and_discharges %>% 
+  mutate(Month = yearmonth(Label), key = 0, Layoffs_and_discharges = Value) %>% 
+  as_tsibble(index = Month, key = key) %>% 
+  mutate(Layoffs_and_discharges_diff = difference(Value)) %>% 
+  select(Month:Layoffs_and_discharges_diff)
+
+Other_separations <- Other_separations %>% 
+  mutate(Month = yearmonth(Label), key = 0, Other_separations = Value) %>% 
+  as_tsibble(index = Month, key = key) %>% 
+  mutate(Other_separations_diff = difference(Value)) %>% 
+  select(Month:Other_separations_diff)
+
+Quits <- Quits %>% 
+  mutate(Month = yearmonth(Label), key = 0, Quits = Value) %>% 
+  as_tsibble(index = Month, key = key) %>% 
+  mutate(Quits_diff = difference(Value)) %>% 
+  select(Month:Quits_diff)
+
+Total_Separations <- Total_Separations %>% 
+  mutate(Month = yearmonth(Label), key = 0, Total_separations = Value) %>% 
+  as_tsibble(index = Month, key = key) %>% 
+  mutate(Total_separations_diff = difference(Value)) %>% 
+  select(Month:Total_separations_diff)
 
 ```
 
