@@ -1,0 +1,24 @@
+---
+title: "Predicting Labor.RMD"
+author: "Russ Conte"
+date: "12/27/2021"
+output: html_document
+---
+
+This is an analysis of labor data to predict future labor trends. The majority of the data is from the United States Department of Labor Statistics.
+
+Outline:
+
+1. Retreive the NUMBER labor reports
+2. Combine the reports into one time series file
+3. Run time series models to predict future numbers
+4. Run time series models to predict future changes
+
+For the greater Chicago area, data on Labor Force, Employment (absolute numbers), Unemployment (absolute numbers), and Unemployment Rate can be found at:
+
+https://data.bls.gov/timeseries/LAUDV171697400000006?amp%253bdata_tool=XGtable&output_view=data&include_graphs=true
+
+Consumer Price Index:
+
+https://data.bls.gov/timeseries/CUURS23ASA0?amp%253bdata_tool=XGtable&output_view=data&include_graphs=true
+
