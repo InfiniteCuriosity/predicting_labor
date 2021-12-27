@@ -20,8 +20,7 @@ All employees: https://beta.bls.gov/dataViewer/view/timeseries/CES0000000001
 Consumer Price Index: https://beta.bls.gov/dataViewer/view/timeseries/CUSR0000SA0
 Unemployment: 	https://beta.bls.gov/dataViewer/view/timeseries/LNS14000000
 Average Hourly Earnings: 	https://beta.bls.gov/dataViewer/view/timeseries/CES0500000003
-Worker Productivity: 	https://beta.bls.gov/dataViewer/view/timeseries/PRS85006092
-
+Worker Productivity: 	https://beta.bls.gov/dataViewer/view/timeseries/PRS85006092 # Quarterly
 Temporary help: https://beta.bls.gov/dataViewer/view/timeseries/CES6056132001
 
 Turnover Level: https://data.bls.gov/timeseries/JTS000000000000000TSL
@@ -46,54 +45,49 @@ library(fpp3)
 library(clock)
 
 #Convert files to tsibble format
-all_employees <- all_employees %>% 
-  mutate(Month = yearmonth(Label)) %>% 
-  as_tsibble() %>% 
-  mutate(all_employees_diff = difference(Value)) %>% 
-  select(Value:all_employees_diff)
+All_employees <- All_employees %>% 
+  mutate(Month = yearmonth(Label), Total_employees = Value) %>% 
+  as_tsibble(index = Month) %>% 
+  mutate(Total_employees_diff = difference(Value)) %>% 
+  select(Total_employees:Total_employees_diff)
 
 Consumer_price_index <- Consumer_price_index %>% 
-  mutate(Month = yearmonth(Label)) %>% 
-  as_tsibble() %>% 
+  mutate(CPI = Value, Month = yearmonth(Label)) %>% 
+  as_tsibble(index = Month) %>% 
   mutate(CPI_diff = difference(Value)) %>% 
-  select(Value:CPI_diff)
+  select(CPI:CPI_diff)
 
 Unemployment <- Unemployment %>% 
-  mutate(Month = yearmonth(Label)) %>% 
-  as_tsibble() %>% 
+  mutate(Month = yearmonth(Label), Num_unemployed = Value) %>% 
+  as_tsibble(index = Month) %>% 
   mutate(Unemployment_diff = difference(Value)) %>% 
-  select(Value:Unemployment_diff)
+  select(Num_unemployed:Unemployment_diff)
 
-Average_hourly_earnings <- Average_hourly_earnings %>% 
-  mutate(Month = yearmonth(Label)) %>% 
-  as_tsibble() %>% 
-  mutate(Avg_earnings_diff = difference(Value)) %>% 
-  select(Value:Avg_earnings_diff)
+Average_hourly_earnings <- Average_hourly_earnings %>%
+  mutate(Avg_hourly_earning = Value, Month = yearmonth(Label)) %>%
+  as_tsibble(index = Month) %>%
+  mutate(Avg_earnings_diff = difference(Value)) %>%
+  select(Avg_hourly_earning:Avg_earnings_diff)
 
 Temp_labor <- temp_labor %>% 
-  mutate(Month = yearmonth(Label)) %>% 
-  as_tsibble() %>% 
+  mutate(Month = yearmonth(Label), Num_temps = Value) %>% 
+  as_tsibble(index = Month) %>% 
   mutate(temp_labor_diff = difference(Value)) %>% 
-  select(Value:temp_labor_diff)
+  select(Num_temps:temp_labor_diff)
 
-Worker_productivity <- Worker_productivity %>% 
-  mutate(Month = yearquarter(Label)) %>% 
-  as_tsibble() %>% 
-  mutate(Productivity_diff = difference(Value)) %>% 
-  select(Value:Productivity_diff)
-
-Turnover_rate <- Turnover_rate %>% 
+Turnover_rate <- Turnover_rate %>%
   pivot_longer(cols = Jan:Dec)
+Turnover_rate
 Turnover_rate$name = match(Turnover_rate$name, month.abb)
-Turnover_rate <- Turnover_rate %>% 
-    mutate(date = date_build(year = Year, month = name, day = 1),
+Turnover_rate <- Turnover_rate %>%
+    mutate(date = date_build(year = Year, month = name),
+          Month = yearmonth(date),
          key = 0,
          turnover_rate = value,
-         turnover_rate_diff = difference(turnover_rate)) %>% 
-  select(date, key, turnover_rate, turnover_rate_diff) %>% 
-  as_tsibble(index = date, key = 0) %>% 
-  mutate(date =yearmonth(date)) %>% 
-  arrange(date)
+         turnover_rate_diff = difference(turnover_rate)) %>%
+  select(Month, key, turnover_rate, turnover_rate_diff)
+Turnover_rate <- Turnover_rate %>%
+  as_tsibble(index = Month, key = key)
 
 Hires <- Hires %>% 
   mutate(Month = yearmonth(Label), key = 0, Hires = Value) %>% 
@@ -130,6 +124,25 @@ Total_Separations <- Total_Separations %>%
   as_tsibble(index = Month, key = key) %>% 
   mutate(Total_separations_diff = difference(Value)) %>% 
   select(Month:Total_separations_diff)
+
+```
+
+Make a tsibble (time series) that combines all the data into one file
+
+```{r Combine all the features into one file that will be used to make predictions}
+
+labor <- 
+  data.frame(
+    index = All_employees$Month,
+    Total_employees <-  All_employees$Total_employees,
+    Num_unemployed <- Unemployment$Num_unemployed,
+    Unemployment_diff <- Unemployment$Unemployment_diff,
+    Temp_labor <- Temp_labor$Value,
+    Temp_labor_diff <- Temp_labor$temp_labor_diff
+  ) %>% 
+  as_tsibble()
+
+labor
 
 ```
 
