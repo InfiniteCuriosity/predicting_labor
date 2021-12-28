@@ -50,6 +50,8 @@ All_employees <- All_employees %>%
   as_tsibble(index = Month) %>% 
   mutate(Total_employees_diff = difference(Value)) %>% 
   select(Total_employees:Total_employees_diff)
+Total_employees <- All_employees$Total_employees
+index = All_employees$Month
 
 Consumer_price_index <- Consumer_price_index %>% 
   mutate(CPI = Value, Month = yearmonth(Label)) %>% 
@@ -69,7 +71,7 @@ Average_hourly_earnings <- Average_hourly_earnings %>%
   mutate(Avg_earnings_diff = difference(Value)) %>%
   select(Avg_hourly_earning:Avg_earnings_diff)
 
-Temp_labor <- temp_labor %>% 
+Temp_labor <- Temp_labor %>% 
   mutate(Month = yearmonth(Label), Num_temps = Value) %>% 
   as_tsibble(index = Month) %>% 
   mutate(temp_labor_diff = difference(Value)) %>% 
@@ -125,6 +127,8 @@ Total_Separations <- Total_Separations %>%
   mutate(Total_separations_diff = difference(Value)) %>% 
   select(Month:Total_separations_diff)
 
+key = 0
+
 ```
 
 Make a tsibble (time series) that combines all the data into one file
@@ -132,15 +136,21 @@ Make a tsibble (time series) that combines all the data into one file
 ```{r Combine all the features into one file that will be used to make predictions}
 
 labor <- 
-  data.frame(
-    index = All_employees$Month,
-    Total_employees <-  All_employees$Total_employees,
-    Num_unemployed <- Unemployment$Num_unemployed,
-    Unemployment_diff <- Unemployment$Unemployment_diff,
-    Temp_labor <- Temp_labor$Value,
-    Temp_labor_diff <- Temp_labor$temp_labor_diff
-  ) %>% 
-  as_tsibble()
+  tibble(
+    Total_Employees = Total_employees,
+    CPI = Consumer_price_index$CPI,
+    Unemployment_rate = Unemployment$Num_unemployed,
+    Num_temporary_employees = Temp_labor$Num_temps,
+    Turnover = Turnover_rate$turnover_rate[1:length(All_employees$Month)],
+    Num_hires = Hires$Hires[1:length(All_employees$Month)],
+    Num_job_openings = Job_openings$Job_openings[1:length(All_employees$Month)],
+    Num_layoffs_and_discharges = Layoffs_and_discharges$Layoffs_and_discharges[1:length(All_employees$Month)],
+    Num_other_separations = Other_separations$Other_separations[1:length(All_employees$Month)],
+    Num_quits = Quits$Quits[1:length(All_employees$Month)],
+    Num_total_separations = Total_Separations$Total_separations[1:length(All_employees$Month)]
+    ) %>% 
+  mutate(Month = All_employees$Month) %>% 
+  as_tsibble(index = Month)
 
 labor
 
